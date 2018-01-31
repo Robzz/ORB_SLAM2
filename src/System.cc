@@ -141,10 +141,12 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
 }
 
 System::System(ORBVocabulary *voc, const Camera &camParams, const OrbParameters &orbParams,
-               const ViewerParameters &viewerParams, const System::eSensor sensor, const bool bUseViewer):
+               const ViewerParameters &viewerParams, const System::eSensor sensor, const bool bUseViewer,
+               const bool saveMap, std::string const& mapFile):
     mSensor(sensor),
     mpVocabulary(voc),
-    is_save_map(false),
+    is_save_map(saveMap),
+    mapfile(mapFile),
     mpViewer(static_cast<Viewer*>(NULL)),
     mbReset(false),
     mbActivateLocalizationMode(false),
@@ -168,7 +170,15 @@ System::System(ORBVocabulary *voc, const Camera &camParams, const OrbParameters 
         cout << "RGB-D" << endl;
 
     //Create KeyFrame Database
-    mpKeyFrameDatabase = new KeyFrameDatabase(mpVocabulary);
+    if (!mapfile.empty() && LoadMap(mapfile))
+    {
+        bReuseMap = true;
+    }
+    else
+    {
+        mpKeyFrameDatabase = new KeyFrameDatabase(mpVocabulary);
+        mpMap = new Map();
+    }
 
     //Create the Map
     mpMap = new Map();
