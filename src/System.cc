@@ -169,6 +169,7 @@ System::System(ORBVocabulary *voc, const Camera &camParams, const OrbParameters 
     else if(mSensor==RGBD)
         cout << "RGB-D" << endl;
 
+    bool bReuseMap = false;
     //Create KeyFrame Database
     if (!mapfile.empty() && LoadMap(mapfile))
     {
@@ -180,11 +181,8 @@ System::System(ORBVocabulary *voc, const Camera &camParams, const OrbParameters 
         mpMap = new Map();
     }
 
-    //Create the Map
-    mpMap = new Map();
-
     //Create Drawers. These are used by the Viewer
-    mpFrameDrawer = new FrameDrawer(mpMap);
+    mpFrameDrawer = new FrameDrawer(mpMap, bReuseMap);
 
     mpMapDrawer = new MapDrawer(mpMap, viewerParams);
 
@@ -192,7 +190,7 @@ System::System(ORBVocabulary *voc, const Camera &camParams, const OrbParameters 
     //(it will live in the main thread of execution, the one that called this constructor)
 
     mpTracker = new Tracking(this, mpVocabulary, mpFrameDrawer, mpMapDrawer,
-                             mpMap, mpKeyFrameDatabase, camParams, orbParams, mSensor);
+                             mpMap, mpKeyFrameDatabase, camParams, orbParams, mSensor, bReuseMap);
 
     //Initialize the Local Mapping thread and launch
     mpLocalMapper = new LocalMapping(mpMap, mSensor==MONOCULAR);
@@ -206,7 +204,7 @@ System::System(ORBVocabulary *voc, const Camera &camParams, const OrbParameters 
     
     if(bUseViewer)
     {
-        mpViewer = new Viewer(this, mpFrameDrawer,mpMapDrawer,mpTracker,camParams,viewerParams);
+        mpViewer = new Viewer(this, mpFrameDrawer,mpMapDrawer,mpTracker,camParams,viewerParams, bReuseMap);
         mptViewer = new thread(&Viewer::Run, mpViewer);
         mpTracker->SetViewer(mpViewer);
     }
